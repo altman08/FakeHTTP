@@ -17,6 +17,7 @@ DEPS_DIR="${ROOT}/deps"
 TAR_DIR="${DEPS_DIR}/tar"
 SRC_DIR="${DEPS_DIR}/src"
 BUILD_DIR="${DEPS_DIR}/build"
+OUT_DIR="${ROOT}/out"
 
 LIBMNL_VER="1.0.5"
 LIBNFNETLINK_VER="1.0.2"
@@ -129,8 +130,8 @@ build_fakehttp() {
 		CFLAGS="-I${deps_prefix}/include" \
 		LDFLAGS="-L${deps_prefix}/lib" >/dev/null
 
-	local out="${ROOT}/build/fakehttp-${arch}"
-	mkdir -p "${ROOT}/build"
+	local out="${OUT_DIR}/fakehttp-${arch}"
+	mkdir -p "${OUT_DIR}"
 	cp -f "${ROOT}/build/fakehttp" "${out}"
 
 	if [ -x "${UPX_BIN}" ]; then
