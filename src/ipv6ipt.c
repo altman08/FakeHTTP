@@ -33,19 +33,19 @@ static int ipt6_iface_setup(void)
     char iface_str[IFNAMSIZ];
     size_t i;
     int res;
-    char *ipt_alliface_src_cmd[] = {"ip6tables", "-w",         "-t",
+    char *ipt_alliface_src_cmd[] = {"ip6tables",              "-t",
                                     "mangle",    "-A",         "FAKEHTTP_S",
                                     "-j",        "FAKEHTTP_R", NULL};
 
-    char *ipt_alliface_dst_cmd[] = {"ip6tables", "-w",         "-t",
+    char *ipt_alliface_dst_cmd[] = {"ip6tables",              "-t",
                                     "mangle",    "-A",         "FAKEHTTP_D",
                                     "-j",        "FAKEHTTP_R", NULL};
 
-    char *ipt_iface_src_cmd[] = {"ip6tables", "-w",         "-t", "mangle",
+    char *ipt_iface_src_cmd[] = {"ip6tables",              "-t", "mangle",
                                  "-A",        "FAKEHTTP_S", "-i", iface_str,
                                  "-j",        "FAKEHTTP_R", NULL};
 
-    char *ipt_iface_dst_cmd[] = {"ip6tables", "-w",         "-t", "mangle",
+    char *ipt_iface_dst_cmd[] = {"ip6tables",              "-t", "mangle",
                                  "-A",        "FAKEHTTP_D", "-o", iface_str,
                                  "-j",        "FAKEHTTP_R", NULL};
 
@@ -92,76 +92,76 @@ int fh_ipt6_setup(void)
     size_t i, ipt_cmds_cnt, ipt_opt_cmds_cnt;
     int res;
     char *ipt_cmds[][32] = {
-        {"ip6tables", "-w", "-t", "mangle", "-N", "FAKEHTTP_S", NULL},
+        {"ip6tables", "-t", "mangle", "-N", "FAKEHTTP_S", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-N", "FAKEHTTP_D", NULL},
+        {"ip6tables", "-t", "mangle", "-N", "FAKEHTTP_D", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-I", "PREROUTING", "-j",
+        {"ip6tables", "-t", "mangle", "-I", "PREROUTING", "-j",
          "FAKEHTTP_S", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-I", "POSTROUTING", "-j",
+        {"ip6tables", "-t", "mangle", "-I", "POSTROUTING", "-j",
          "FAKEHTTP_D", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-N", "FAKEHTTP_R", NULL},
+        {"ip6tables", "-t", "mangle", "-N", "FAKEHTTP_R", NULL},
 
         /*
             exclude special IPv6 addresses (from source)
         */
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_S", "-s", "::/127",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_S", "-s", "::/127",
          "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
          "::ffff:0:0/96", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
          "64:ff9b::/96", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
          "64:ff9b:1::/48", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
          "2002::/16", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
          "fc00::/7", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_S", "-s",
          "fe80::/10", "-j", "RETURN", NULL},
 
         /*
             exclude special IPv6 addresses (to destination)
         */
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_D", "-d", "::/127",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_D", "-d", "::/127",
          "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
          "::ffff:0:0/96", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
          "64:ff9b::/96", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
          "64:ff9b:1::/48", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
          "2002::/16", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
          "fc00::/7", "-j", "RETURN", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_D", "-d",
          "fe80::/10", "-j", "RETURN", NULL},
 
         /*
             exclude marked packets
         */
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_R", "-m", "mark",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_R", "-m", "mark",
          "--mark", xmark_str, "-j", "RETURN", NULL},
 
         /*
             send to nfqueue
         */
-        {"ip6tables", "-w", "-t", "mangle", "-A", "FAKEHTTP_R", "-p", "tcp",
+        {"ip6tables", "-t", "mangle", "-A", "FAKEHTTP_R", "-p", "tcp",
          "--tcp-flags", "SYN,FIN,RST", "SYN", "-j", "NFQUEUE",
          "--queue-bypass", "--queue-num", nfqnum_str, NULL}};
 
@@ -171,7 +171,7 @@ int fh_ipt6_setup(void)
             order. This rule is optional. We do not verify its execution
             result.
         */
-        {"ip6tables",   "-w",
+        {"ip6tables",
          "-t",          "mangle",
          "-A",          "FAKEHTTP_R",
          "-p",          "tcp",
@@ -229,23 +229,23 @@ void fh_ipt6_cleanup(void)
 {
     size_t i, cnt;
     char *ipt_cmds[][32] = {
-        {"ip6tables", "-w", "-t", "mangle", "-F", "FAKEHTTP_R", NULL},
+        {"ip6tables", "-t", "mangle", "-F", "FAKEHTTP_R", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-F", "FAKEHTTP_S", NULL},
+        {"ip6tables", "-t", "mangle", "-F", "FAKEHTTP_S", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-F", "FAKEHTTP_D", NULL},
+        {"ip6tables", "-t", "mangle", "-F", "FAKEHTTP_D", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-D", "PREROUTING", "-j",
+        {"ip6tables", "-t", "mangle", "-D", "PREROUTING", "-j",
          "FAKEHTTP_S", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-D", "POSTROUTING", "-j",
+        {"ip6tables", "-t", "mangle", "-D", "POSTROUTING", "-j",
          "FAKEHTTP_D", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-X", "FAKEHTTP_R", NULL},
+        {"ip6tables", "-t", "mangle", "-X", "FAKEHTTP_R", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-X", "FAKEHTTP_S", NULL},
+        {"ip6tables", "-t", "mangle", "-X", "FAKEHTTP_S", NULL},
 
-        {"ip6tables", "-w", "-t", "mangle", "-X", "FAKEHTTP_D", NULL}};
+        {"ip6tables", "-t", "mangle", "-X", "FAKEHTTP_D", NULL}};
 
     cnt = sizeof(ipt_cmds) / sizeof(*ipt_cmds);
     for (i = 0; i < cnt; i++) {
