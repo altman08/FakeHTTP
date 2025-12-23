@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
+shopt -s inherit_errexit 2>/dev/null || true
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 UPX_BIN="/home/sadog/project/upx/upx-5.0.2"
 PLUGIN_BIN_DIR="${ROOT}/../fakehttp/bin"
+JOBS="${JOBS:-4}"
+if [[ "${JOBS}" =~ ^[0-9]+$ ]]; then
+  if [ "${JOBS}" -lt 1 ]; then JOBS=1; fi
+  if [ "${JOBS}" -gt 4 ]; then JOBS=4; fi
+else
+  JOBS=4
+fi
 
 DEPS_DIR="${ROOT}/deps"
 TAR_DIR="${DEPS_DIR}/tar"
@@ -49,6 +57,7 @@ build_one_dep() {
 	local host="$4"
 	local prefix="$5"
 
+	mkdir -p "$(dirname "${build}")"
 	rm -rf "${build}"
 	cp -a "${src}" "${build}"
 
@@ -58,7 +67,7 @@ build_one_dep() {
 		--prefix="${prefix}" \
 		--disable-shared \
 		--enable-static
-	make -j"$(nproc)"
+	make -j"${JOBS}"
 	make install
 	popd >/dev/null
 }
@@ -80,7 +89,7 @@ build_deps() {
 	export PKG_CONFIG_PATH="${prefix}/lib/pkgconfig"
 	export PKG_CONFIG_LIBDIR="${prefix}/lib/pkgconfig"
 
-	echo "== deps: ${arch} (${host}) =="
+	echo "== deps: ${arch} (${host}) ==" >&2
 
 	build_one_dep "libmnl" \
 		"${SRC_DIR}/libmnl" \
@@ -108,14 +117,14 @@ build_fakehttp() {
 
 	export PATH="${toolchain_root}/bin:${PATH}"
 
-	echo "== fakehttp: ${arch} (${host}) =="
+	echo "== fakehttp: ${arch} (${host}) ==" >&2
 	make clean >/dev/null 2>&1 || true
 
 	local cross_prefix="${toolchain_root}/bin/${host}-"
 	local version
 	version="$(git describe --tags --always 2>/dev/null || echo todo)"
 
-	make -j"$(nproc)" \
+	make -j"${JOBS}" \
 		STATIC=1 \
 		CROSS_PREFIX="${cross_prefix}" \
 		VERSION="${version}" \
@@ -172,4 +181,3 @@ main() {
 }
 
 main "$@"
-
