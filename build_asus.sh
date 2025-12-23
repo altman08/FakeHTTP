@@ -141,6 +141,7 @@ build_fakehttp() {
 }
 
 main() {
+	cd "${ROOT}"
 	if [ ! -x "${UPX_BIN}" ]; then
 		echo "upx not found or not executable: ${UPX_BIN}"
 		exit 1
