@@ -66,9 +66,9 @@ build_one_dep() {
 		--host="${host}" \
 		--prefix="${prefix}" \
 		--disable-shared \
-		--enable-static
-	make -j"${JOBS}"
-	make install
+		--enable-static >/dev/null
+	make -j"${JOBS}" >/dev/null
+	make install >/dev/null
 	popd >/dev/null
 }
 
@@ -105,8 +105,6 @@ build_deps() {
 		"${SRC_DIR}/libnetfilter_queue" \
 		"${BUILD_DIR}/${arch}/libnetfilter_queue" \
 		"${host}" "${prefix}"
-
-	echo "${prefix}"
 }
 
 build_fakehttp() {
@@ -129,7 +127,7 @@ build_fakehttp() {
 		CROSS_PREFIX="${cross_prefix}" \
 		VERSION="${version}" \
 		CFLAGS="-I${deps_prefix}/include" \
-		LDFLAGS="-L${deps_prefix}/lib"
+		LDFLAGS="-L${deps_prefix}/lib" >/dev/null
 
 	local out="${ROOT}/build/fakehttp-${arch}"
 	mkdir -p "${ROOT}/build"
@@ -167,10 +165,13 @@ main() {
 	local host32="arm-linux-musleabi"
 
 	local deps32 deps64 out32 out64
-	deps32="$(build_deps arm32 "${tc32}" "${host32}")"
+	deps32="${BUILD_DIR}/out/arm32"
+	deps64="${BUILD_DIR}/out/arm64"
+
+	build_deps arm32 "${tc32}" "${host32}"
 	out32="$(build_fakehttp arm32 "${tc32}" "${host32}" "${deps32}")"
 
-	deps64="$(build_deps arm64 "${tc64}" "${host64}")"
+	build_deps arm64 "${tc64}" "${host64}"
 	out64="$(build_fakehttp arm64 "${tc64}" "${host64}" "${deps64}")"
 
 	install -m 0755 "${out32}" "${PLUGIN_BIN_DIR}/fakehttp-arm"
