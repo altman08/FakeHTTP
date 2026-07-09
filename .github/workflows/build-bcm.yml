@@ -1,0 +1,99 @@
+name: Build (BCM toolchain)
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  # ---- Cross compile with the same BCM-HND toolchains used by
+  #      webd/.github/workflows/build.yml, so fakehttp is built with the
+  #      exact same compiler/glibc/binutils as the router firmware. ----
+  build-cross:
+    name: build-${{ matrix.platform.name }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: arm-linux
+            cross: arm-linux-
+            toolchain_dir: crosstools-arm-gcc-5.5-linux-4.1-glibc-2.26-binutils-2.28.1
+          # - name: aarch64-linux
+          #   cross: aarch64-linux-
+          #   toolchain_dir: crosstools-aarch64-gcc-5.5-linux-4.1-glibc-2.26-binutils-2.28.1
+    env:
+      TOOLCHAINS_REPO: https://github.com/SWRT-dev/bcmhnd-toolchains.git
+    steps:
+      - name: Install 32-bit runtime libs
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends make \
+            libc6:i386 libstdc++6:i386 zlib1g:i386 \
+            libmpc3:i386 libmpfr6:i386 libgmp10:i386
+          wget -q https://security.ubuntu.com/ubuntu/pool/universe/i/isl-0.18/libisl15_0.18-4_i386.deb
+          sudo dpkg -i libisl15_0.18-4_i386.deb || sudo apt-get install -f -y
+          rm -f libisl15_0.18-4_i386.deb
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      # Toolchain installation happens here in the workflow, not inside
+      # the build script.
+      - name: Install toolchain
+        env:
+          CROSS_PREFIX: /opt/toolchains/${{ matrix.platform.toolchain_dir }}/bin/${{ matrix.platform.cross }}
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse "$TOOLCHAINS_REPO" /opt/toolchains
+          cd /opt/toolchains
+          git sparse-checkout set "${{ matrix.platform.toolchain_dir }}"
+          test -x "${CROSS_PREFIX}gcc"
+          "${CROSS_PREFIX}gcc" --version | head -1
+
+      - name: Build
+        run: |
+          ./build_bcm.sh \
+            --cross-prefix "/opt/toolchains/${{ matrix.platform.toolchain_dir }}/bin/${{ matrix.platform.cross }}" \
+            --arch-name "${{ matrix.platform.name }}" \
+            --out-dir "build/arch"
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: fakehttp-${{ matrix.platform.name }}
+          path: build/arch/fakehttp-${{ matrix.platform.name }}
+          if-no-files-found: error
+
+  # ---- 发布 Release ----
+  release-tag:
+    runs-on: ubuntu-latest
+    needs: [build-cross]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fakehttp-*
+          path: build/arch
+          merge-multiple: true
+      - name: Create Release Archives
+        run: |
+          cd build/arch
+          chmod a+x fakehttp-*
+          for f in fakehttp-*; do
+            tar czf "${f}.tar.gz" "$f"
+          done
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/arch/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
